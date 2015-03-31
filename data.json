@@ -1,0 +1,74 @@
+{
+    "tanks": [
+    {
+        "country": "RU",
+        "model": "T-44",
+        "velocity": 50,
+        "damage": 100,
+        "armor":{
+          "turret_front": 10,
+          "turret_side": 40,
+          "turret_rear": 6,
+          "hull_front": 200,
+          "hull_side": 40,
+          "hull_rear": 60
+        }
+    },
+    {
+        "country": "RU",
+        "model": "T-44",
+        "velocity": 100,
+        "damage": 200,
+        "armor":{
+          "turret_front": 200,
+          "turret_side": 40,
+          "turret_rear": 60,
+          "hull_front": 200,
+          "hull_side": 40,
+          "hull_rear": 60
+        }
+    },
+    {
+        "country": "RU",
+        "model": "T-44",
+        "velocity": 150,
+        "damage": 200,
+        "armor":{
+          "turret_front": 0,
+          "turret_side": 40,
+          "turret_rear": 6,
+          "hull_front": 20,
+          "hull_side": 400,
+          "hull_rear": 60
+        }
+    },
+    {
+        "country": "RU",
+        "model": "T-44",
+        "velocity": 10,
+        "damage": 260,
+        "armor":{
+          "turret_front": 200,
+          "turret_side": 400,
+          "turret_rear": 100,
+          "hull_front": 20,
+          "hull_side": 40,
+          "hull_rear": 60
+        }
+    },
+    {
+        "country": "RU",
+        "model": "T-44",
+        "velocity": 300,
+        "damage": 252,
+        "armor":{
+          "turret_front": 10,
+          "turret_side": 10,
+          "turret_rear": 10,
+          "hull_front": 80,
+          "hull_side": 40,
+          "hull_rear": 60
+        }
+    }
+    ]
+}
