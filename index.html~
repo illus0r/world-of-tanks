@@ -4,39 +4,25 @@
   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-<script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <link rel="stylesheet" href="style.css">
 <script>
-$(function() {
-    $( "#buttonset-country" ).buttonset();
-    $( "#buttonset-weightgroup" ).buttonset();
-    $( "#buttonset-level" ).buttonset();
-    });
 </script>
 </head>
 <body>
 <div id="buttonset-country">
-  <input type="checkbox" id="checkbox-ussr"><label for="checkbox-ussr">СССР</label>
-  <input type="checkbox" id="checkbox-germany"><label for="checkbox-germany">ГЕР</label>
-  <input type="checkbox" id="checkbox-usa"><label for="checkbox-usa">США</label>
-  <input type="checkbox" id="checkbox-britain"><label for="checkbox-britain">БРИТ</label>
+  <!--<input type="checkbox" id="checkbox-ussr" name="su"><label for="checkbox-ussr">СССР</label>-->
+  <!--<input type="checkbox" id="checkbox-germany" name="de"><label for="checkbox-germany">ГЕР</label>-->
+  <!--<input type="checkbox" id="checkbox-usa" name="us"><label for="checkbox-usa">США</label>-->
+  <!--<input type="checkbox" id="checkbox-britain" name="gb"><label for="checkbox-britain">БРИТ</label>-->
 </div>
-<div id="buttonset-weightgroup">
-  <input type="checkbox" id="checkbox-light"><label for="checkbox-light">Лёгкие</label>
-  <input type="checkbox" id="checkbox-middle"><label for="checkbox-middle">Средние</label>
-  <input type="checkbox" id="checkbox-heavy"><label for="checkbox-heavy">Тяжёлые</label>
-  <input type="checkbox" id="checkbox-spg"><label for="checkbox-spg">ПТ/САУ</label>
+<div id="buttonset-weight">
+  <!--<input type="checkbox" id="checkbox-light"><label for="checkbox-light">Лёгкие</label>-->
+  <!--<input type="checkbox" id="checkbox-middle"><label for="checkbox-middle">Средние</label>-->
+  <!--<input type="checkbox" id="checkbox-heavy"><label for="checkbox-heavy">Тяжёлые</label>-->
+  <!--<input type="checkbox" id="checkbox-spg"><label for="checkbox-spg">ПТ/САУ</label>-->
 </div>
 <div id="buttonset-level">
-  <input type="checkbox" id="checkbox-level1"><label for="checkbox-level1">I</label>
-  <input type="checkbox" id="checkbox-level2"><label for="checkbox-level2">II</label>
-  <input type="checkbox" id="checkbox-level3"><label for="checkbox-level3">III</label>
-  <input type="checkbox" id="checkbox-level4"><label for="checkbox-level4">IV</label>
-  <input type="checkbox" id="checkbox-level5"><label for="checkbox-level5">V</label>
-  <input type="checkbox" id="checkbox-level6"><label for="checkbox-level6">VI</label>
-  <input type="checkbox" id="checkbox-level7"><label for="checkbox-level7">VII</label>
-  <input type="checkbox" id="checkbox-level8"><label for="checkbox-level8">VIII</label>
-  <input type="checkbox" id="checkbox-level9"><label for="checkbox-level9">IX</label>
-  <input type="checkbox" id="checkbox-level10"><label for="checkbox-level10">X</label>
 </div>
 <script type="text/javascript" charset="utf-8" src="draw.js"></script>
 </body>
