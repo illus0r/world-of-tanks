@@ -1,9 +1,11 @@
 {
     "tanks": [
     {
-        "country": "RU",
-        "model": "T-44",
+        "country": "us",
+        "model": "usT-44",
         "velocity": 50,
+        "weight": "middle",
+        "level": "V",
         "damage": 100,
         "armor":{
           "turret_front": 10,
@@ -15,9 +17,11 @@
         }
     },
     {
-        "country": "RU",
-        "model": "T-44",
+        "country": "gb",
+        "model": "gbT-44",
         "velocity": 100,
+        "weight": "middle",
+        "level": "VI",
         "damage": 200,
         "armor":{
           "turret_front": 200,
@@ -29,9 +33,11 @@
         }
     },
     {
-        "country": "RU",
-        "model": "T-44",
+        "country": "ru",
+        "model": "ruT-44",
         "velocity": 150,
+        "weight": "middle",
+        "level": "VI",
         "damage": 200,
         "armor":{
           "turret_front": 0,
@@ -43,9 +49,11 @@
         }
     },
     {
-        "country": "us",
-        "model": "T-44",
+        "country": "ru",
+        "model": "ruT-44",
         "velocity": 10,
+        "weight": "middle",
+        "level": "VI",
         "damage": 260,
         "armor":{
           "turret_front": 200,
@@ -58,8 +66,10 @@
     },
     {
         "country": "ge",
-        "model": "T-44",
+        "model": "geT-44",
         "velocity": 300,
+        "weight": "middle",
+        "level": "IV",
         "damage": 252,
         "armor":{
           "turret_front": 10,

@@ -1,145 +1,214 @@
 var filters = { 
   level: ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"],
-  country: ['su', 'ge', 'us', 'gb'],
+  country: ['ussr', 'germany', 'us', 'gb'],
   weight: ['light', 'middle', 'heavy', 'spg']
 }
 
 $(document).ready(function() {
   for(c in filters.country) {
     var val = filters.country[c];
-     $('<input type="checkbox" id="checkbox-country-'+val+'"><label for="checkbox-country-'+val+'">'+val+'</label>', {
-        //click: function () { alert(this.val()); }
-     }).appendTo('#buttonset-country');
+    $('<input type="checkbox"  id="checkbox-country-'+val+'" name="'+val+'"><label for="checkbox-country-'+val+'">'+val+'</label>', {
+    }).appendTo('#buttonset-country');
   }
   for(w in filters.weight) {
     var val = filters.weight[w];
-     $('<input type="checkbox" id="checkbox-weight-'+val+'"><label for="checkbox-weight-'+val+'">'+val+'</label>', {
-        //click: function () { alert(this.val()); }
-     }).appendTo('#buttonset-weight');
+    $('<input type="checkbox" id="checkbox-weight-'+val+'" name="'+val+'"><label for="checkbox-weight-'+val+'">'+val+'</label>', {
+    }).appendTo('#buttonset-weight');
   }
   for(l in filters.level) {
     var val = filters.level[l];
-     $('<input type="checkbox" id="checkbox-level-'+val+'"><label for="checkbox-level-'+val+'">'+val+'</label>', {
-        //click: function () { alert(this.val()); }
-     }).appendTo('#buttonset-level');
+    $('<input type="checkbox" id="checkbox-level-'+val+'" name="'+val+'"><label for="checkbox-level-'+val+'">'+val+'</label>', {
+    }).appendTo('#buttonset-level');
   }
   $('.buttonset').buttonset();
 });
 
 
-d3.json("data.json", function(error, json) {
+d3.csv("data.csv", function(error, csv) {
   if (error) return console.warn(error);
-  d3.xml("tank-prototype2.svg", "image/svg+xml", function(xml) {
+  d3.xml("img/svg/Pz.Kpfw. S35 739 (f).obj0001.svg", "image/svg+xml", function(xml) {
     var importedNode = document.importNode(xml.documentElement, true);
-    var data = json.tanks;
+
+    //console.log(csv);
+    csv = csv.map( function(d) {
+      delete d.armorhf;
+      delete d.armorhr;
+      delete d.armorhs;
+      delete d.armortf;
+      delete d.armortr;
+      delete d.armorts;
+      d.armor = d.armor.split('/');
+      d.damage = +d.damage;
+      return d;
+    } )
+    var data = csv;
+
+    $('.buttonset input').click(function(evt) {
+      update_data();
+      update_scale();
+      update_scatterplot();
+    });
 
     var width =  800, // w & h of graph area
-        height = 600,
-        margins = [20, 150, 150, 40]; // top, rifght, bottom, left
+    height = 600,
+    margins = [20, 150, 150, 40]; // top, rifght, bottom, left
 
-    var svg = d3.select("body").append("svg")
-      .attr("width", width + margins[1] + margins[3])
-      .attr("height", height + margins[0] + margins[2])
-      .append('g')
-      .attr('transform', 'translate('+margins[3]+','+margins[0]+')');
+  var scale_velocity, scale_damage, scale_armor;
+    var armor_values = [];
+    for (var i = data.length - 1; i >= 0; i--){
+      for (var key in data[i].armor) {
+        armor_values.push(data[i].armor[key]);
+      }
+    }
+    var scale_armor_extent = d3.extent(armor_values);
+    scale_armor = d3.scale.linear()
+      .domain([scale_armor_extent[0], scale_armor_extent[0]/2+scale_armor_extent[1]/2, scale_armor_extent[1]])
+      .range(['orange', 'gold', 'yellowgreen']);
+  var xAxis = d3.svg.axis()
+    //.scale(scale_velocity)
+    .orient("bottom"),
+  yAxis = d3.svg.axis()
+    //.scale(scale_damage)
+    .orient("left");
 
-    svg.append('rect')
-      .attr('id', 'graph-border')
-      .attr({stroke: '#cccccc',
-        fill: 'white',
-        //'stroke-width': 2,
-        width: width,
-        height: height
-      });
+  //// color legend
+  //var colors = d3.scale.quantize()
+    //.range(['red', 'white', 'blue', 'green', 'black', 'yellow', 'pink']);
+  //var legend = d3.select('#legend')
+    //.append('ul')
+    //.attr('class', 'list-inline');
+  //var keys = legend.selectAll('li.key')
+    //.data(colors.range());
+  //keys.enter().append('li')
+    //.attr('class', 'key')
+    //.style('border-top-color', String)
+    //.text(function(d) {
+      //var r = colors.invertExtent(d);
+      //return formats.percent(r[0]);
+    //});
 
-    redraw();
+  var svg = d3.select("body").append("svg")
+    .attr("width", width + margins[1] + margins[3])
+    .attr("height", height + margins[0] + margins[2])
+    .append('g')
+    .attr('transform', 'translate('+margins[3]+','+margins[0]+')');
 
-    function redraw(){
-        var scale_velocity = d3.scale.linear()
+  svg.append('rect')
+  .attr('id', 'graph-border')
+  .attr({stroke: '#cccccc',
+    fill: 'white',
+    //'stroke-width': 2,
+    width: width,
+    height: height
+  });
+
+  svg.append("g")
+    .attr("class", "y axis");
+    //.attr("transform", "translate(" + margin + ",0)")
+  svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")");
+
+    function update_scale(){
+      scale_velocity = d3.scale.linear()
         .domain(d3.extent(data, function(d) { return d.velocity; }))
         .range([0, width]),
-        scale_damage = d3.scale.linear()
+      scale_damage = d3.scale.linear()
         .domain(d3.extent(data, function(d) { return d.damage; }))
         .range([height, 0]);
-      var armor_values = [];
-      for (var i = data.length - 1; i >= 0; i--){
-        for (var key in data[i].armor) {
-          armor_values.push(data[i].armor[key]);
-        }
-      }
-      //console.log(d3.extent(armor_values));
-      scale_armor = d3.scale.linear()
-        .domain(d3.extent(armor_values))
-        .range(['red','yellow']);
+      console.log(d3.extent(data, function(d) { return d.damage; }));
 
-      var xAxis = d3.svg.axis()
-        .scale(scale_velocity)
-        .orient("bottom"),
-        yAxis = d3.svg.axis()
-          .scale(scale_damage)
-          .orient("left");
+      var xAxis_scale = xAxis.scale(scale_velocity);
+      var yAxis_scale = yAxis.scale(scale_damage);
 
-      var tanks = svg.selectAll("g")
-        .data(data)
+      svg.select("g.y.axis")
+        .transition().duration(500)
+        .call(yAxis);
+      svg.select("g.x.axis")
+        .transition().duration(500)
+        .call(xAxis);
+    }
+
+    function update_scatterplot(){
+      var tanks = svg.selectAll("g.tank")
+        .data(data);
+      // exit
+      tanks
+        .exit()
+        //.transition()
+        .remove();
+      // enter
+      var tanks_enter = tanks
         .enter()
         .append("g")
-        .attr("transform", function(d, i){ 
-          return "translate(" + scale_velocity(d.velocity) + "," 
-          + scale_damage(d.damage) + ")";
-        })
-      tanks
+        .classed('tank', true);
+      tanks_enter
         .append("svg:image")
         .attr('x',0)
         .attr('y',0)
         .attr('width', 16)
         .attr('height', 11)
+        .classed('flag', true);
+      tanks_enter
+        .append("text");
+      tanks_enter
+        .append("g")
+        .attr("transform", function(d, i){ 
+          return "scale("+ 0.5 +")";
+        })
+        .each(function(d, i){ 
+          var plane = this.appendChild(importedNode.cloneNode(true)); 
+          d3.select(plane).select("#tf").attr("fill", scale_armor(d.armor[0])).attr('style', '');
+          d3.select(plane).select("#tr").attr("fill",  scale_armor(d.armor[1])).attr('style', '');
+          d3.select(plane).select("#ts").attr("fill", scale_armor(d.armor[2])).attr('style', '');
+          d3.select(plane).select("#hf").attr("fill",   scale_armor(d.armor[3])).attr('style', '');
+          d3.select(plane).select("#hr").attr("fill",    scale_armor(d.armor[4])).attr('style', '');
+          d3.select(plane).select("#hs").attr("fill",   scale_armor(d.armor[5])).attr('style', '');
+        });
+      // update
+      tanks
+        .attr('opacity',0)
+        .attr("transform", function(d, i){ 
+          return "translate(" + scale_velocity(d.velocity) + "," 
+          + scale_damage(d.damage) + ")";
+        })
+        .transition()
+        .attr('opacity',1);
+      tanks
+        .select("image")
         .attr("xlink:href", function(d) {
           return "img/icons-flag/"+d.country+".png";
         });
       tanks
-        .append("text")
+        .select('text')
         .text( function(d) {
           return d.model;
-        } )
-      .classed('flag', true);
-      tanks
-        .append("g")
-        .attr("transform", function(d, i){ 
-          return "scale("+ 0.3 +")";
-        })
-      .each(function(d, i){ 
-        var plane = this.appendChild(importedNode.cloneNode(true)); 
-        d3.select(plane).select("#turret-side1").attr("fill", scale_armor(d.armor.turret_side)).attr('style', '');
-        d3.select(plane).select("#turret-side2").attr("fill", scale_armor(d.armor.turret_side)).attr('style', '');
-        d3.select(plane).select("#turret-front").attr("fill", scale_armor(d.armor.turret_front)).attr('style', '');
-        d3.select(plane).select("#turret-rear").attr("fill", scale_armor(d.armor.turret_rear)).attr('style', '');
-        d3.select(plane).select("#hull-side1").attr("fill", scale_armor(d.armor.hull_side)).attr('style', '');
-        d3.select(plane).select("#hull-side2").attr("fill", scale_armor(d.armor.hull_side)).attr('style', '');
-        d3.select(plane).select("#hull-front").attr("fill", scale_armor(d.armor.hull_front)).attr('style', '');
-        d3.select(plane).select("#hull-rear").attr("fill", scale_armor(d.armor.hull_rear)).attr('style', '');
-      });
-
-      svg.append("g")
-        .attr("transform", "translate(0,"+height+")")
-        .call(xAxis);
-      svg.append("g")
-        .attr("transform", "translate(0,0)")
-        .call(yAxis);
-
+        } );
       }
 
-      $(".buttonset").click(function() {
-        //get list of toggles values
-        //var items = $(this).buttonset("option", "items");
-        var items = $(".buttonset :checked + label").text();
-        //console.log(items);
+      function update_data() {
+        var current_filters = {
+          level: $.map( $("#buttonset-level :checked"), function(val){
+            return val.name;
+          }),
+          country:  $.map( $("#buttonset-country :checked"), function(val){
+            return val.name;
+          }),
+          weight:  $.map( $("#buttonset-weight :checked"), function(val){
+            return val.name;
+          })
+        };
+        data = csv.filter( function(d) {
+          if (current_filters.level.indexOf(d.level) >= 0 &&
+            current_filters.country.indexOf(d.country) >= 0 &&
+            current_filters.weight.indexOf(d.weight) >=0) {
+            return true;
+          }
+          return false;
+        });
+        console.log(data);
+      }
 
-        //refilter data
-        //if (['a', 'b', 'c'].indexOf(str) >= 0) {
-          ////do something
-        //}
-        redraw();
-      });
 
   });
 });

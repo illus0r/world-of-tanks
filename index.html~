@@ -10,19 +10,19 @@
 </script>
 </head>
 <body>
-<div id="buttonset-country">
+<div id="buttonset-country" class='buttonset'>
   <!--<input type="checkbox" id="checkbox-ussr" name="su"><label for="checkbox-ussr">СССР</label>-->
   <!--<input type="checkbox" id="checkbox-germany" name="de"><label for="checkbox-germany">ГЕР</label>-->
   <!--<input type="checkbox" id="checkbox-usa" name="us"><label for="checkbox-usa">США</label>-->
   <!--<input type="checkbox" id="checkbox-britain" name="gb"><label for="checkbox-britain">БРИТ</label>-->
 </div>
-<div id="buttonset-weight">
+<div id="buttonset-weight" class='buttonset'>
   <!--<input type="checkbox" id="checkbox-light"><label for="checkbox-light">Лёгкие</label>-->
   <!--<input type="checkbox" id="checkbox-middle"><label for="checkbox-middle">Средние</label>-->
   <!--<input type="checkbox" id="checkbox-heavy"><label for="checkbox-heavy">Тяжёлые</label>-->
   <!--<input type="checkbox" id="checkbox-spg"><label for="checkbox-spg">ПТ/САУ</label>-->
 </div>
-<div id="buttonset-level">
+<div id="buttonset-level" class='buttonset'>
 </div>
 <script type="text/javascript" charset="utf-8" src="draw.js"></script>
 </body>
