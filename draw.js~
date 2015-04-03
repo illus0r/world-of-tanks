@@ -26,8 +26,25 @@ $(document).ready(function() {
 
 d3.csv("data.csv", function(error, csv) {
   if (error) return console.warn(error);
-  d3.xml("img/svg/Pz.Kpfw. S35 739 (f).obj0001.svg", "image/svg+xml", function(xml) {
-    var importedNode = document.importNode(xml.documentElement, true);
+    d3.xml("img/svg/Рейдер.obj0001.svg", "image/svg+xml", function(xml) {
+    var tank_svg_default = document.importNode(xml.documentElement, true);
+
+    function load_svg( model_name ){
+      jQuery('body').append('<div class="loader"></div>');
+      jQuery('body .loader').load("img/svg/"+model_name+".obj0001.svg", null, function() { 
+        jQuery('#theElement').click( function() {
+          alert('You clicked on the element!');
+        });
+      });
+      console.log("img/svg/"+model_name+".obj0001.svg");
+      var tank_svg;
+      d3.xml("img/svg/"+model_name+".obj0001.svg", "image/svg+xml", function(xml) {
+        tank_svg = document.importNode(xml.documentElement, true);
+      });
+      if(tank_svg) return tank_svg;
+      console.log(tank_svg);
+      return tank_svg_default;
+    }
 
     //console.log(csv);
     csv = csv.map( function(d) {
@@ -39,6 +56,7 @@ d3.csv("data.csv", function(error, csv) {
       delete d.armorts;
       d.armor = d.armor.split('/');
       d.damage = +d.damage;
+      d.tank_svg = load_svg(d.model);
       return d;
     } )
     var data = csv;
@@ -62,8 +80,9 @@ d3.csv("data.csv", function(error, csv) {
     }
     var scale_armor_extent = d3.extent(armor_values);
     scale_armor = d3.scale.linear()
+      //TODO rewrite
       .domain([scale_armor_extent[0], scale_armor_extent[0]/2+scale_armor_extent[1]/2, scale_armor_extent[1]])
-      .range(['orange', 'gold', 'YellowGreen']);
+      .range(['orange', 'gold', 'yellowgreen']);
   var xAxis = d3.svg.axis()
     //.scale(scale_velocity)
     .orient("bottom"),
@@ -116,7 +135,7 @@ d3.csv("data.csv", function(error, csv) {
       scale_damage = d3.scale.linear()
         .domain(d3.extent(data, function(d) { return d.damage; }))
         .range([height, 0]);
-      console.log(d3.extent(data, function(d) { return d.damage; }));
+      //console.log(d3.extent(data, function(d) { return d.damage; }));
 
       var xAxis_scale = xAxis.scale(scale_velocity);
       var yAxis_scale = yAxis.scale(scale_damage);
@@ -157,7 +176,7 @@ d3.csv("data.csv", function(error, csv) {
           return "scale("+ 0.5 +")";
         })
         .each(function(d, i){ 
-          var plane = this.appendChild(importedNode.cloneNode(true)); 
+          var plane = this.appendChild(d.tank_svg.cloneNode(true)); 
           d3.select(plane).select("#tf").attr("fill", scale_armor(d.armor[0])).attr('style', '');
           d3.select(plane).select("#tr").attr("fill",  scale_armor(d.armor[1])).attr('style', '');
           d3.select(plane).select("#ts").attr("fill", scale_armor(d.armor[2])).attr('style', '');
@@ -206,7 +225,7 @@ d3.csv("data.csv", function(error, csv) {
           }
           return false;
         });
-        console.log(data);
+        //console.log(data);
       }
 
 
