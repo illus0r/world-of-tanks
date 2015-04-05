@@ -2,9 +2,9 @@ body{
   /*background: url(http://blog.infotanka.ru/pictures/WoT-graph-hover-44@2x.png);*/
   font-family: "Helvetica neue", sans-serif;
   font-size: 17px;
-  margin: 0 auto;
+  margin: 0/* auto*/;
   padding: 0;
-  position: relative;
+  /*position: relative;*/
   width: 1399px;
 }
 h1{
@@ -144,7 +144,7 @@ svg .tank .extra image{
 }
 svg .tank .extra text{
   font-size: 0.8em;
-  transform: translate(23px,11px);
+  transform: translate(28px,12px);
 }
 
 /* details */

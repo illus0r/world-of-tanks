@@ -214,7 +214,7 @@ $(document).ready(function() {
       } );
       
       // Добавляем флажки и прочее в наши .tanks
-      var tanks = svg.select('.tanks').selectAll('g.tank')
+      var tanks = svg.selectAll('defs>g')
         .data(data, function(d){return d.model;});
       var tank_extra = tanks.append('g')
         .classed('extra', true);
@@ -290,8 +290,8 @@ $(document).ready(function() {
 
       function update_scatterplot(){
         var tanks_ = svg.select('.tanks').selectAll('use')
-          .data(data);
-          //.data(data, function(d){return d.model;});
+          //.data(data);
+          .data(data, function(d){return d.model;});
         // enter
         tanks_
           .enter()
@@ -323,7 +323,7 @@ $(document).ready(function() {
           .on("mouseover",function(d){
             var sel = d3.select(this);
             sel.moveToFront();
-            console.log('over...... x=', sel);
+            //console.log('over...... x=', sel);
             details
               .classed('left', d3.select(this).attr('x') < 500)
               .html(get_details_text(d))
@@ -332,7 +332,7 @@ $(document).ready(function() {
               .style({display: 'block'});
           })
           .on("mouseout", function(d) {
-            console.log('out')
+            //console.log('out')
             details
               .transition()
               .style({opacity: 0})

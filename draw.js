@@ -214,7 +214,7 @@ $(document).ready(function() {
       } );
       
       // Добавляем флажки и прочее в наши .tanks
-      var tanks = svg.select('.tanks').selectAll('g.tank')
+      var tanks = svg.selectAll('defs>g')
         .data(data, function(d){return d.model;});
       var tank_extra = tanks.append('g')
         .classed('extra', true);
@@ -240,13 +240,6 @@ $(document).ready(function() {
           d3.select(this).select("[id^='hr']").attr("fill", scale_armor(d.armor[4])).attr('style', '');
           d3.select(this).select("[id^='hs']").attr("fill", scale_armor(d.armor[5])).attr('style', '');
         });
-      tanks
-        .enter()
-        .append('use')
-        .classed('tank', true)
-        //.attr('width',40)
-        //.attr('height',40)
-        .attr('xlink:href', '#default')
 
       svg.append("g")
         .attr("class", "y axis");
@@ -323,7 +316,7 @@ $(document).ready(function() {
           .on("mouseover",function(d){
             var sel = d3.select(this);
             sel.moveToFront();
-            console.log('over...... x=', sel);
+            //console.log('over...... x=', sel);
             details
               .classed('left', d3.select(this).attr('x') < 500)
               .html(get_details_text(d))
@@ -332,7 +325,7 @@ $(document).ready(function() {
               .style({display: 'block'});
           })
           .on("mouseout", function(d) {
-            console.log('out')
+            //console.log('out')
             details
               .transition()
               .style({opacity: 0})
