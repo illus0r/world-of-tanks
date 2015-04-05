@@ -94,7 +94,7 @@ d3.selection.prototype.moveToFront = function() {
 };
 
 function uncollapse_extent(extent){
-  if (extent.length > 1){
+  if (extent[0] != extent[1]){
     return extent;
   }
   else{
@@ -200,8 +200,9 @@ $(document).ready(function() {
       //$('svg:nth-of-type(2)>g').wrapInner('<g class="tank-svg"></g>');
       // переносим их на новый svg)
       // .tanks - обёртка для всех танков на графике
-      svg.append('defs').classed('tanks', true);
-      $('svg:nth-of-type(2)>g').detach().appendTo($('svg.scatterplot .tanks'));
+      svg.append('defs');
+      svg.append('g').classed('tanks', true);
+      $('svg:nth-of-type(2)>g').detach().appendTo($('svg.scatterplot defs'));
       $('svg:nth-of-type(2)').detach();
       d3.selectAll('g.tank').each( function(d,i) {
         // собираемся прикрепить данные по названию модели, поэтому пропишем его в дате
@@ -255,7 +256,7 @@ $(document).ready(function() {
 
       function get_id_by_model(model){
         var id = 'default';
-        d3.selectAll('.tanks>g').each( function(d) {
+        d3.selectAll('defs>g').each( function(d) {
           //console.log('? '+d3.select(this).attr(':inkscape:label')+" =  "+model);
           if(d3.select(this).attr(':inkscape:label') == model){
             id = d3.select(this).attr('id');
@@ -288,7 +289,7 @@ $(document).ready(function() {
       }
 
       function update_scatterplot(){
-        var tanks_ = svg.selectAll('use.tank')
+        var tanks_ = svg.select('.tanks').selectAll('use')
           .data(data);
           //.data(data, function(d){return d.model;});
         // enter
@@ -301,25 +302,6 @@ $(document).ready(function() {
           // TODO
           .attr('xlink:href', function(d) {
             return '#'+get_id_by_model(d.model);
-          })
-          .on("mouseover",function(d){
-            var sel = d3.select(this);
-            sel.moveToFront();
-            console.log('over...... x=', sel);
-            details
-              .classed('left', d3.select(this).attr('x') < 500)
-              .html(get_details_text(d))
-              .transition()
-              .style({opacity: 1})
-              .style({display: 'block'});
-          })
-          .on("mouseout", function(d) {
-            console.log('out')
-            // TODO enable
-            //details
-              //.transition()
-              //.style({opacity: 0})
-              //.style({display: 'none'});
           });
           //.attr('opacity', 0)
           //.transition()
@@ -337,6 +319,25 @@ $(document).ready(function() {
           })
           .attr('y', function(d){ 
             return scale_damage(d.damage);
+          })
+          .on("mouseover",function(d){
+            var sel = d3.select(this);
+            sel.moveToFront();
+            console.log('over...... x=', sel);
+            details
+              .classed('left', d3.select(this).attr('x') < 500)
+              .html(get_details_text(d))
+              .transition()
+              .style({opacity: 1})
+              .style({display: 'block'});
+          })
+          .on("mouseout", function(d) {
+            console.log('out')
+            details
+              .transition()
+              .style({opacity: 0})
+              .transition()
+              .style({display: 'none'});
           });
         // exit
         tanks_

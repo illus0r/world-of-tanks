@@ -2,8 +2,10 @@ body{
   /*background: url(http://blog.infotanka.ru/pictures/WoT-graph-hover-44@2x.png);*/
   font-family: "Helvetica neue", sans-serif;
   font-size: 17px;
-  margin: 0;
-  min-width: 1399px;
+  margin: 0/* auto*/;
+  padding: 0;
+  /*position: relative;*/
+  width: 1399px;
 }
 h1{
   font-size: 2.5em;
