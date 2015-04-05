@@ -2,9 +2,8 @@ body{
   /*background: url(http://blog.infotanka.ru/pictures/WoT-graph-hover-44@2x.png);*/
   font-family: "Helvetica neue", sans-serif;
   font-size: 17px;
-  margin: 0/* auto*/;
+  margin: 0;
   padding: 0;
-  /*position: relative;*/
   width: 1399px;
 }
 h1{
@@ -15,6 +14,7 @@ h1{
 }
 
 /* UI */
+
 .filter-panel{
   padding-left: 40px;
   margin-bottom: 54px;
@@ -22,7 +22,6 @@ h1{
 .buttonset{
   display: inline-block;
   margin-right: 16px;
-  /*height: 29px;*/
 }
 #buttonset-country .flag{
   width: 20px;
@@ -34,7 +33,6 @@ h1{
   margin-right: 0px;
 }
 .ui-button-text-only .ui-button-text{
-  /*height: 29px;*/
   padding: 3px 10px 3px;
   font-size: 0.9em;
 }
@@ -58,7 +56,6 @@ h1{
 	font-weight: normal;
 	color: #000;
 }
-/* Corner radius */
 .ui-corner-all,
 .ui-corner-top,
 .ui-corner-left,
@@ -84,18 +81,18 @@ h1{
 	border-bottom-right-radius: 0px;
 }
 
-/* axis */
+/* Axises */
+
 .domain {
   display: none;
 }
 .axis .tick text{
-  /*font-size: 0.95em;*/
 }
 .x.axis .tick text{
-  -webkit-transform: translate(0px,6px);
+  transform: translate(0px,6px);
 }
 .y.axis .tick text{
-  -webkit-transform: translate(-3px,0px);
+  transform: translate(-3px,0px);
 }
 .label {
   position: absolute;
@@ -157,7 +154,6 @@ svg .tank .extra text{
   left: 55px;
   background: white;
   width: 387px;
-  /*opacity: 0.6;*/
 }
 .details.left{
   left: 997px;
@@ -177,7 +173,6 @@ svg .tank .extra text{
 }
 .details .image-placeholder{
   position: absolute;
-  /*right: 35px;*/
   right: 25px;
   top: 65px;
   width: 150px;

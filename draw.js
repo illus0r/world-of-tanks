@@ -1,8 +1,18 @@
-var width =  1357, // w & h of graph area
+// Ivan Dianov
+// for http://datalaboratory.ru/
+//
+// World of Tanks
+// interactive visualisation of tank parameters
+//
+// April 2015
+
+var width =  1357, // w & h of scatterplot
     height = 811,
     margins =  [1, 1, 42, 42], // top, rifght, bottom, left
+    // paddings inside scatterplot
     paddings = [100,100, 100,100]; // top, rifght, bottom, left
 
+// data for radios
 var filters = { 
   level: [
     {name:'I', value:'I'},
@@ -27,9 +37,11 @@ var filters = {
     {name:'spg', value:'ПТ-САУ'}]
 }
 
-var tanks_svg_scale = 0.6;
-var tanks_svg_offset = [-280, -250].map( function(d) { return d * tanks_svg_scale; });
+var tankssvg_scale = 0.6;
+// in raw svg file all models are offseted for some reason. Fixing it.
+var tankssvg_offset = [-280, -250].map( function(d) { return d * tankssvg_scale; });
 
+//formats detailed info of tank
 function get_details_text(d){
   var html = 
     '<h2>'+d.model+'</h2>'+
@@ -87,12 +99,14 @@ function get_details_text(d){
   return html;
 }
 
-d3.selection.prototype.moveToFront = function() {
+// puts element in top of siblings
+d3.selection.prototype.move_to_front = function() {
   return this.each(function(){
     this.parentNode.appendChild(this);
   });
 };
 
+// if scale extent = 0 (for example [120, 120]) we expand it
 function uncollapse_extent(extent){
   if (extent[0] != extent[1]){
     return extent;
@@ -103,11 +117,14 @@ function uncollapse_extent(extent){
 }
 
 $(document).ready(function() {
+  // loading tank data
   d3.csv("data.csv", function(error, csv) {
     if (error) return console.warn(error);
+    // loading svg containing all tank images
     d3.xml("img/svg/universal.svg", "image/svg+xml", function(xml) {
-      var tanks_svg = document.importNode(xml.documentElement, true);
+      var raw_svg = document.importNode(xml.documentElement, true);
 
+      // preparing data
       csv = csv.map( function(d) {
         delete d.armorhf;
         delete d.armorhr;
@@ -122,6 +139,8 @@ $(document).ready(function() {
       var data = csv;
 
       var scale_velocity, scale_damage, scale_armor;
+      // armor scale doesn't change on time, so setting it beforehand
+      // we will find extent of all armor values of all tanks
       var armor_values = [];
       for (var i = data.length - 1; i >= 0; i--){
         for (var key in data[i].armor) {
@@ -132,12 +151,10 @@ $(document).ready(function() {
       scale_armor = d3.scale.linear()
         //TODO rewrite
         .domain([scale_armor_extent[0], scale_armor_extent[0]/2+scale_armor_extent[1]/2, scale_armor_extent[1]])
-        .range(['orange', 'gold', 'yellowgreen']);
+        .range(['#e97654', '#feee88', '#549f4a']);
       var xAxis = d3.svg.axis()
-        //.scale(scale_velocity)
         .orient("bottom"),
         yAxis = d3.svg.axis()
-          //.scale(scale_damage)
           .orient("left");
 
       //// color legend
@@ -173,50 +190,74 @@ $(document).ready(function() {
       var details = d3.select('body').append('div')
         .attr('class', 'details');
 
-      //var details = svg.append('foreignObject')
-        //.attr({
-          //width: "200", height: "200", requiredFeatures: "http://www.w3.org/TR/SVG11/feature#Extensibility"
-        //})
-        //.append('p')
-        //.attr({
-          //xmlns: "http://www.w3.org/1999/xhtml"
-        //})
-        //.text('Text goes here');
-        //.attr({
-          //class: "node", x: "46", y: "22", width: "200", height: "300",
-        //})
-        //.append('body').attr('xmlns', 'http://www.w3.org/1999/xhtml')
-        //.append('div').attr('id','info')
-        //.text('hello!!!');
-
-      // Перенесём все элементы inkscape файла в созданный нами svg
-      //TODO сейчас элементы переезжают в svg не оптимальным способом
+      // moving all tank images from raw svg to <defs>
+      //TODO make it in more clever manier
+      //
+      //first making a copy of whole raw svg
       d3.select('body').each(function(d, i){ 
-        var plane = this.appendChild(tanks_svg.cloneNode(true)); 
+        this.appendChild(raw_svg.cloneNode(true)); 
       });
-      // на старый svg добавляем классы для всех танков, включая default
-      // TODO переписать на d3
+      // adding class to all tanks of raw svg
       $('svg:nth-of-type(2)>g').attr('class','tank');
-      //$('svg:nth-of-type(2)>g').wrapInner('<g class="tank-svg"></g>');
-      // переносим их на новый svg)
-      // .tanks - обёртка для всех танков на графике
+      // moving all tanks to new svg
       svg.append('defs');
       svg.append('g').classed('tanks', true);
       $('svg:nth-of-type(2)>g').detach().appendTo($('svg.scatterplot defs'));
       $('svg:nth-of-type(2)').detach();
       d3.selectAll('g.tank').each( function(d,i) {
-        // собираемся прикрепить данные по названию модели, поэтому пропишем его в дате
-        // TODO переписать через d3 функцию .datum()
+        // we will bind data by __data__.model
+        // in raw svg model is stored in attribute inkscape:label
         this.__data__ = {model: d3.select(this).attr(':inkscape:label')}
+        // compensating offset
         d3.select(this).attr('transform',
-                            'translate('+tanks_svg_offset[0]+','+tanks_svg_offset[1]+') '+
-                            'scale('+tanks_svg_scale+')');
+                            'translate('+tankssvg_offset[0]+','+tankssvg_offset[1]+') '+
+                            'scale('+tankssvg_scale+')');
       } );
       
-      // Добавляем флажки и прочее в наши .tanks
-      var tanks = svg.selectAll('defs>g')
+      var tanksdefs = svg.selectAll('defs>g')
         .data(data, function(d){return d.model;});
-      var tank_extra = tanks.append('g')
+
+      // we make clones of #default tank for each unbound data item...
+      tanksdefs
+        .enter()
+        .call( function(d) {
+          var available_models = svg.selectAll('defs>g')[0]
+            .map( function(d) {
+              return d.__data__.model;
+            } );
+          var unavailable_models = d[0].filter( function(datum) {
+            if (available_models.indexOf(datum.__data__.model) >= 0){
+              return false;
+            }
+            return true;
+          } );
+          var unique_index = 0;
+          unavailable_models.map( function(d) {
+            var node = d3.select('#default').node();
+            var node_clone = d3.select(node.parentNode.insertBefore(node.cloneNode(true),
+                node.nextSibling))
+            node_clone[0][0].__data__ = d.__data__;
+            node_clone[0][0].id += ++unique_index;
+          } );
+        } );
+      // ...and reloading data
+      // to get new clones in
+      tanksdefs = svg.selectAll('defs>g')
+        .data(data, function(d){return d.model;});
+
+      // making tanks colorful according to armor values
+      tanksdefs
+        .each(function(d, i){ 
+          var armor_parts = ['tf', 'tr', 'ts', 'hf', 'hr', 'hs']
+          for (ap in armor_parts){
+            d3.select(this).select("[id^='"+armor_parts[ap]+"']")
+              .attr("fill", scale_armor(d.armor[ap]))
+              .attr('style', '');
+          }
+        });
+
+      // adding extra to tanks (flag image and model name)
+      var tank_extra = tanksdefs.append('g')
         .classed('extra', true);
       tank_extra
         .append("svg:image")
@@ -230,35 +271,27 @@ $(document).ready(function() {
         .text( function(d) {
           return d.model;
         } );
-      tanks
-        .each(function(d, i){ 
-          //var plane = this.appendChild(d3.select("[:inkscape:label='default']").cloneNode(true)); 
-          d3.select(this).select("[id^='tf']").attr("fill", scale_armor(d.armor[0])).attr('style', '');
-          d3.select(this).select("[id^='tr']").attr("fill", scale_armor(d.armor[1])).attr('style', '');
-          d3.select(this).select("[id^='ts']").attr("fill", scale_armor(d.armor[2])).attr('style', '');
-          d3.select(this).select("[id^='hf']").attr("fill", scale_armor(d.armor[3])).attr('style', '');
-          d3.select(this).select("[id^='hr']").attr("fill", scale_armor(d.armor[4])).attr('style', '');
-          d3.select(this).select("[id^='hs']").attr("fill", scale_armor(d.armor[5])).attr('style', '');
-        });
 
+      // Axises
       svg.append("g")
         .attr("class", "y axis");
       svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")");
 
+      // looks through <defs> for tank with given model
       function get_id_by_model(model){
         var id = 'default';
         d3.selectAll('defs>g').each( function(d) {
-          //console.log('? '+d3.select(this).attr(':inkscape:label')+" =  "+model);
-          if(d3.select(this).attr(':inkscape:label') == model){
+          if(d3.select(this)[0][0].__data__.model == model){
             id = d3.select(this).attr('id');
           }
         });
-        //console.log('no model named '+model);
+        // should not be reachable
         return id;
       }
 
+      // updates all scales, axises according to updated data
       function update_scale(){
         var extent_velocity = d3.extent(data, function(d) { return d.velocity; });
         var extent_damage   = d3.extent(data, function(d) { return d.damage; });
@@ -268,7 +301,6 @@ $(document).ready(function() {
         scale_damage = d3.scale.linear()
           .domain(uncollapse_extent(extent_damage))
           .range([height - paddings[2], paddings[0]]);
-        //console.log(d3.extent(data, function(d) { return d.damage; }));
 
         var xAxis_scale = xAxis.scale(scale_velocity);
         var yAxis_scale = yAxis.scale(scale_damage);
@@ -282,69 +314,55 @@ $(document).ready(function() {
       }
 
       function update_scatterplot(){
-        var tanks_ = svg.select('.tanks').selectAll('use')
-          //.data(data);
+        update_data();
+        update_scale();
+        var tanks = svg.select('.tanks').selectAll('use')
           .data(data, function(d){return d.model;});
         // enter
-        tanks_
+        tanks
           .enter()
           .append('use')
           .classed('tank', true)
-          //.attr('width',40)
-          //.attr('height',40)
-          // TODO
           .attr('xlink:href', function(d) {
             return '#'+get_id_by_model(d.model);
           });
-          //.attr('opacity', 0)
-          //.transition()
-          //.attr('opacity', 1);
         // update
-        tanks_
-          //.transition()
-          //.attr('transform', function(d){ 
-            //var x = scale_velocity(d.velocity) + tanks_svg_offset[0];
-            //var y = scale_damage(d.damage) + tanks_svg_offset[1];
-            //return 'translate('+x+','+y+')';
-          //});
+        tanks
           .attr('x', function(d){ 
             return scale_velocity(d.velocity);
           })
           .attr('y', function(d){ 
             return scale_damage(d.damage);
           })
+          // does not work on enter, so goes for update
           .on("mouseover",function(d){
             var sel = d3.select(this);
-            sel.moveToFront();
-            //console.log('over...... x=', sel);
+            sel.move_to_front();
             details
               .classed('left', d3.select(this).attr('x') < 500)
               .html(get_details_text(d))
-              .transition()
               .style({opacity: 1})
               .style({display: 'block'});
           })
           .on("mouseout", function(d) {
-            //console.log('out')
             details
-              .transition()
               .style({opacity: 0})
               .transition()
               .style({display: 'none'});
           });
         // exit
-        tanks_
+        tanks
           .exit()
-          //.transition()
           .attr('opacity', 0)
           .remove();
-        tanks_.sort( function(a,b) {
+        tanks.sort( function(a,b) {
           if (a.damage > b.damage)
             return -1;
           return 1;
         } );
       }
 
+      // filters data according to radios states
       function update_data() {
         var current_filters = {
           level: $.map( $("#buttonset-level :checked"), function(val){
@@ -365,42 +383,49 @@ $(document).ready(function() {
             }
           return false;
         });
-        //console.log(data);
       }
 
+      // making filter radio contros
+      // (jQuery UI buttons)
       function init_document(){
         for(i in filters.country) {
           var nam = filters.country[i].name;
           var val = filters.country[i].value;
-          $('<input type="checkbox"  id="checkbox-country-'+nam+'" name="'+nam+'"><label for="checkbox-country-'+nam+'"><img src="img/icons-flag/'+nam+'.png" class="flag"></span>'+val+'</label>', {
+          $('<input type="checkbox"  id="checkbox-country-'+nam+
+              '" name="'+nam+'"><label for="checkbox-country-'+nam+
+              '"><img src="img/icons-flag/'+nam+
+              '.png" class="flag"></span>'+val+
+              '</label>', {
           }).appendTo('#buttonset-country');
         }
         for(i in filters.weight) {
           var nam = filters.weight[i].name;
           var val = filters.weight[i].value;
-          $('<input type="checkbox" id="checkbox-weight-'+nam+'" name="'+nam+'"><label for="checkbox-weight-'+nam+'">'+val+'</label>', {
+          $('<input type="checkbox" id="checkbox-weight-'+nam+
+              '" name="'+nam+'"><label for="checkbox-weight-'+nam+
+              '">'+val+'</label>', {
           }).appendTo('#buttonset-weight');
         }
         for(i in filters.level) {
           var nam = filters.level[i].name;
           var val = filters.level[i].value;
           $('<input type="checkbox" id="checkbox-level-'+nam+
-              '" name="'+nam+
-              '"><label for="checkbox-level-'+nam+
-              '">'+val+
-              '</label>', {
+              '" name="'+nam+'"><label for="checkbox-level-'+nam+
+              '">'+val+'</label>', {
           }).appendTo('#buttonset-level');
         }
-        $('#checkbox-country-ussr')[0].checked = true;
+        // setting initial state of radios
         $('#checkbox-country-germany')[0].checked = true;
+        $('#checkbox-weight-light')[0].checked = true;
         $('#checkbox-weight-middle')[0].checked = true;
         $('#checkbox-level-IV')[0].checked = true;
+        $('#checkbox-level-II')[0].checked = true;
+        // making jQuery UI magic
         $('.buttonset').buttonset();
         $('.buttonset').click(function(evt) {
-          update_data();
-          update_scale();
           update_scatterplot();
         });
+        // ...and launching instantly!
         $('.buttonset').trigger( "click" );
       }
 
