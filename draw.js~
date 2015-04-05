@@ -1,10 +1,78 @@
+var width =  1357, // w & h of graph area
+    height = 811,
+    margins =  [1, 0, 42, 42], // top, rifght, bottom, left
+    paddings = [100,100, 100,100]; // top, rifght, bottom, left
+
 var filters = { 
   level: ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"],
   country: ['ussr', 'germany', 'us', 'gb'],
   weight: ['light', 'middle', 'heavy', 'spg']
 }
 
-var tanks_svg_offset = [-100, -100];
+var tanks_svg_scale = 0.4;
+var tanks_svg_offset = [-280, -250].map( function(d) { return d * tanks_svg_scale; });
+
+function get_details_text(d){
+  var html = 
+    '<h1>'+d.model+'</h1>'+
+    '<table>'+
+      '<tr>'+
+        '<td>Скорость, км/ч</td>'+
+        '<td>'+d.velocity+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Урон за 10 сек., у.е.</td>'+
+        '<td>'+d.damage+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Прочность, у.е.</td>'+
+        '<td>'+d.hit_points+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td colspan=3><b>Броня, у.е.</b></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Лоб</td>'+
+        '<td>'+d.armor[0]+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Борт</td>'+
+        '<td>'+d.armor[2]+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Корма</td>'+
+        '<td>'+d.armor[1]+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Лоб башни</td>'+
+        '<td>'+d.armor[3]+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Борт башни</td>'+
+        '<td>'+d.armor[5]+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Корма башни</td>'+
+        '<td>'+d.armor[4]+'</td>'+
+        '<td></td>'+
+      '</tr>'+
+    '</table>'
+  return html;
+}
+
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function(){
+    this.parentNode.appendChild(this);
+  });
+};
 
 $(document).ready(function() {
   d3.csv("data.csv", function(error, csv) {
@@ -24,10 +92,6 @@ $(document).ready(function() {
         return d;
       } )
       var data = csv;
-
-      var width =  800, // w & h of graph area
-          height = 600,
-          margins = [20, 150, 150, 40]; // top, rifght, bottom, left
 
       var scale_velocity, scale_damage, scale_armor;
       var armor_values = [];
@@ -71,19 +135,31 @@ $(document).ready(function() {
         .append('g')
         .attr('transform', 'translate('+margins[3]+','+margins[0]+')');
 
-      // g.tanks - обёртка для всех танков на графике
-      svg.append('g')
-        .classed('tanks', true);
-
-
       svg.append('rect')
       .attr('id', 'graph-border')
-      .attr({stroke: '#cccccc',
-        fill: 'none',
-        //'stroke-width': 2,
+      .attr({
         width: width,
         height: height
       });
+
+      var details = d3.select('body').append('div')
+        .attr('class', 'details');
+
+      //var details = svg.append('foreignObject')
+        //.attr({
+          //width: "200", height: "200", requiredFeatures: "http://www.w3.org/TR/SVG11/feature#Extensibility"
+        //})
+        //.append('p')
+        //.attr({
+          //xmlns: "http://www.w3.org/1999/xhtml"
+        //})
+        //.text('Text goes here');
+        //.attr({
+          //class: "node", x: "46", y: "22", width: "200", height: "300",
+        //})
+        //.append('body').attr('xmlns', 'http://www.w3.org/1999/xhtml')
+        //.append('div').attr('id','info')
+        //.text('hello!!!');
 
       // Перенесём все элементы inkscape файла в созданный нами svg
       //TODO сейчас элементы переезжают в svg не оптимальным способом
@@ -93,17 +169,71 @@ $(document).ready(function() {
       // на старый svg добавляем классы для всех танков, включая default
       // TODO переписать на d3
       $('svg:nth-of-type(2)>g').attr('class','tank');
-      // переносим их на новый svg
+      //$('svg:nth-of-type(2)>g').wrapInner('<g class="tank-svg"></g>');
+      // переносим их на новый svg)
+      // .tanks - обёртка для всех танков на графике
+      svg.append('defs').classed('tanks', true);
       $('svg:nth-of-type(2)>g').detach().appendTo($('svg.scatterplot .tanks'));
       $('svg:nth-of-type(2)').detach();
       d3.selectAll('g.tank').each( function(d,i) {
         // собираемся прикрепить данные по названию модели, поэтому пропишем его в дате
         // TODO переписать через d3 функцию .datum()
         this.__data__ = {model: d3.select(this).attr(':inkscape:label')}
-        d3.select(this).attr('transform','');
-        // изначально все скрыты, update_scatterplot сделает видимыми нужные
-        d3.select(this).attr('opacity',0);
+        d3.select(this).attr('transform',
+                            'translate('+tanks_svg_offset[0]+','+tanks_svg_offset[1]+') '+
+                            'scale('+tanks_svg_scale+')');
       } );
+      
+      // Добавляем флажки и прочее в наши .tanks
+      var tanks = svg.select('.tanks').selectAll('g.tank')
+        .data(data, function(d){return d.model;});
+      var tank_extra = tanks.append('g')
+        .classed('extra', true);
+      tank_extra
+        .append("svg:image")
+        .attr('width', '20')
+        .attr('height', '12')
+        .attr("xlink:href", function(d) {
+          return "img/icons-flag/"+d.country+".png";
+        });
+      tank_extra
+        .append("text")
+        .text( function(d) {
+          return d.model;
+        } );
+      tanks
+        .each(function(d, i){ 
+          //var plane = this.appendChild(d3.select("[:inkscape:label='default']").cloneNode(true)); 
+          d3.select(this).select("[id^='tf']").attr("fill", scale_armor(d.armor[0])).attr('style', '');
+          d3.select(this).select("[id^='tr']").attr("fill", scale_armor(d.armor[1])).attr('style', '');
+          d3.select(this).select("[id^='ts']").attr("fill", scale_armor(d.armor[2])).attr('style', '');
+          d3.select(this).select("[id^='hf']").attr("fill", scale_armor(d.armor[3])).attr('style', '');
+          d3.select(this).select("[id^='hr']").attr("fill", scale_armor(d.armor[4])).attr('style', '');
+          d3.select(this).select("[id^='hs']").attr("fill", scale_armor(d.armor[5])).attr('style', '');
+        });
+      tanks
+        .enter()
+        .append('use')
+        .classed('tank', true)
+        //.attr('width',40)
+        //.attr('height',40)
+        .attr('xlink:href', '#default')
+      tanks
+        .on("mouseover", function(d) {
+          console.log('over......');
+          details
+            .transition()
+            .html(get_details_text(d))
+            .style({opacity: 1})
+            .style({display: 'block'});
+        })
+        .on("mouseout", function(d) {
+          console.log('out')
+          details
+            .transition()
+            .style({opacity: 0})
+            .style({display: 'none'});
+        });
 
       svg.append("g")
         .attr("class", "y axis");
@@ -111,13 +241,25 @@ $(document).ready(function() {
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")");
 
+      function get_id_by_model(model){
+        var id = 'default';
+        d3.selectAll('.tanks>g').each( function(d) {
+          //console.log('? '+d3.select(this).attr(':inkscape:label')+" =  "+model);
+          if(d3.select(this).attr(':inkscape:label') == model){
+            id = d3.select(this).attr('id');
+          }
+        });
+        //console.log('no model named '+model);
+        return id;
+      }
+
       function update_scale(){
         scale_velocity = d3.scale.linear()
           .domain(d3.extent(data, function(d) { return d.velocity; }))
-          .range([0, width]),
+          .range([paddings[3], width - paddings[1]]),
         scale_damage = d3.scale.linear()
           .domain(d3.extent(data, function(d) { return d.damage; }))
-          .range([height, 0]);
+          .range([height - paddings[2], paddings[0]]);
         //console.log(d3.extent(data, function(d) { return d.damage; }));
 
         var xAxis_scale = xAxis.scale(scale_velocity);
@@ -132,64 +274,52 @@ $(document).ready(function() {
       }
 
       function update_scatterplot(){
-        var tanks = svg.selectAll("g.tank, use.tank")
-          .data(data, function(d) { return d.model; });
+        var tanks_ = svg.selectAll('use.tank')
+          .data(data);
+          //.data(data, function(d){return d.model;});
+        // enter
+        tanks_
+          .enter()
+          .append('use')
+          .classed('tank', true)
+          //.attr('width',40)
+          //.attr('height',40)
+          // TODO
+          .attr('xlink:href', function(d) {
+            return '#'+get_id_by_model(d.model);
+          })
+          .on("mouseover",function(){
+            var sel = d3.select(this);
+            sel.moveToFront();
+          });
+          //.attr('opacity', 0)
+          //.transition()
+          //.attr('opacity', 1);
+        // update
+        tanks_
+          //.transition()
+          //.attr('transform', function(d){ 
+            //var x = scale_velocity(d.velocity) + tanks_svg_offset[0];
+            //var y = scale_damage(d.damage) + tanks_svg_offset[1];
+            //return 'translate('+x+','+y+')';
+          //});
+          .attr('x', function(d){ 
+            return scale_velocity(d.velocity);
+          })
+          .attr('y', function(d){ 
+            return scale_damage(d.damage);
+          });
         // exit
-        tanks
+        tanks_
           .exit()
           //.transition()
-          .attr('opacity', 0);
-          //.remove();
-        // enter
-        var tanks_enter = tanks
-          .enter()
-          .append("use")
-          .attr(':xlink:href','#g6041')
-          .attr('opacity',1)
-          .attr('transform','transition(10,10)')
-          .classed('tank', true);
-        tanks_enter
-          .append("svg:image")
-          .attr('x',0)
-          .attr('y',0)
-          .attr('width', 16)
-          .attr('height', 11)
-          .classed('flag', true);
-        tanks_enter
-          .append("text");
-        tanks_enter
-          .append("g")
-          .attr("transform", function(d, i){
-            return "scale("+ 0.5 +")";
-          })
-        .each(function(d, i){ 
-          var plane = this.appendChild(d3.select("[:inkscape:label='default']").cloneNode(true)); 
-          d3.select(plane).select("path[id^='tf']").attr("fill", scale_armor(d.armor[0])).attr('style', '');
-          d3.select(plane).select("[id^='tr']").attr("fill", scale_armor(d.armor[1])).attr('style', '');
-          d3.select(plane).select("[id^='ts']").attr("fill", scale_armor(d.armor[2])).attr('style', '');
-          d3.select(plane).select("[id^='hf']").attr("fill", scale_armor(d.armor[3])).attr('style', '');
-          d3.select(plane).select("[id^='hr']").attr("fill", scale_armor(d.armor[4])).attr('style', '');
-          d3.select(plane).select("[id^='hs']").attr("fill", scale_armor(d.armor[5])).attr('style', '');
-        });
-        // update
-        tanks
-          .attr('opacity',0)
-          .attr("transform", function(d, i){ 
-            return "translate(" + scale_velocity(d.velocity) + "," 
-            + scale_damage(d.damage) + ")";
-          })
-        .transition()
-          .attr('opacity',1);
-        tanks
-          .select("image")
-          .attr("xlink:href", function(d) {
-            return "img/icons-flag/"+d.country+".png";
-          });
-        tanks
-          .select('text')
-          .text( function(d) {
-            return d.model;
-          } );
+          .attr('opacity', 0)
+          .remove();
+        tanks_.sort( function(a,b) {
+          if (a.damage > b.damage)
+            return -1;
+          return 1;
+        } );
       }
 
       function update_data() {
